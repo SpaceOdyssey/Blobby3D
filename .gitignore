@@ -2,10 +2,13 @@
 ####################
 *.o
 Blobby3D
+__pycache__/
 
 # Tests #
 ####################
 Tests/
+python/
+Examples/
 
 # Results #
 ####################
