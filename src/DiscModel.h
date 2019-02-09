@@ -71,7 +71,9 @@ class DiscModel {
     double xcd;
     double ycd;
     double gama_inc;
-    double inc, pa;
+    double inc;
+    double pa;
+    double pa_grad;
 
     double vsys;
     double vmax;
@@ -90,6 +92,7 @@ class DiscModel {
 
     // Prior distributions
     DNest4::Uniform prior_pa;
+    DNest4::Gaussian prior_pa_grad;
     DNest4::TruncatedCauchy prior_xc;
     DNest4::TruncatedCauchy prior_yc;
 

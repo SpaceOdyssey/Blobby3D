@@ -100,6 +100,7 @@ DiscModel::DiscModel()
   // Inclination
   inc = Data::get_instance().get_inc();
   prior_pa = DNest4::Uniform(0.0, 2.0*M_PI);
+  prior_pa_grad = DNest4::Gaussian(0.0, 0.1);
   prior_xc = DNest4::TruncatedCauchy(
     Data::get_instance().get_x_imcentre(),
     Data::get_instance().get_gamma_pos(),
@@ -165,6 +166,7 @@ void DiscModel::from_prior(DNest4::RNG& rng) {
   ycd = prior_yc.generate(rng);
 
   pa = prior_pa.generate(rng);
+  pa_grad = prior_pa_grad.generate(rng);
 
   /*
     Initialise: Velocity profile parameters
@@ -246,7 +248,7 @@ double DiscModel::perturb(DNest4::RNG& rng) {
 
     } else if (rnd < 0.8) {
       // Perturb disc parameters
-      int which = rng.rand_int(10);
+      int which = rng.rand_int(11);
 
       switch (which) {
         case 0:
@@ -286,6 +288,10 @@ double DiscModel::perturb(DNest4::RNG& rng) {
           array_perturb = true;
           break;
         case 9:
+          logH += prior_pa_grad.perturb(pa_grad, rng);
+          array_perturb = true;
+          break;
+        case 10:
           which = rng.rand_int(vdisp_order);
           logH += prior_vdisp.perturb(vdisp_param[which+1], rng);
           vdisp_perturb = true;
@@ -421,6 +427,7 @@ void DiscModel::print(std::ostream& out) const {
     out<<vdisp_param[i]<<' ';
   out<<inc<<' ';
   out<<pa<<' ';
+  out<<pa_grad<<' ';
   out<<sigma0<<' ';
   out<<sigma1<<' ';
 }
@@ -562,8 +569,10 @@ void DiscModel::calculate_shifted_arrays() {
   const std::vector< std::vector<double> >&
     y = Data::get_instance().get_y();
 
-  double sin_pa = sin(pa);
-  double cos_pa = cos(pa);
+  double r, par;
+  double sin_pa, cos_pa;
+  // double sin_pa = sin(pa);
+  // double cos_pa = cos(pa);
   double invcos_inc = 1.0/cos(inc);
 
   double xx_rot, yy_rot;
@@ -573,6 +582,12 @@ void DiscModel::calculate_shifted_arrays() {
       // Shift
       x_shft[i][j] = x[i][j] - xcd;
       y_shft[i][j] = y[i][j] - ycd;
+
+      // Calculate position angle
+      r = sqrt(pow(x_shft[i][j], 2) + pow(y_shft[i][j], 2));
+      par = pa + pa_grad*r;
+      sin_pa = sin(par);
+      cos_pa = cos(par);
 
       // rotate by pa around z (counter-clockwise, East pa = 0)
       xx_rot = x_shft[i][j]*cos_pa + y_shft[i][j]*sin_pa;
@@ -622,8 +637,9 @@ void DiscModel::add_blob_flux(std::vector< std::vector<double> >& components) {
   const double pixel_width = Data::get_instance().get_pixel_width();
   const size_t nlines = Data::get_instance().get_em_line().size();
 
-  double sin_pa = sin(pa);
-  double cos_pa = cos(pa);
+  double r, par;
+  double sin_pa; // = sin(pa);
+  double cos_pa; // = cos(pa);
   double cos_inc = cos(inc);
   double invcos_inc = 1.0/cos_inc;
 
@@ -704,6 +720,12 @@ void DiscModel::add_blob_flux(std::vector< std::vector<double> >& components) {
             // Shift
             xd_shft = x_shft[i][j] + js*dxfs;
             yd_shft = y_shft[i][j] + is*dyfs;
+
+            // Calculate position angle
+            r = sqrt(pow(x_shft[i][j], 2) + pow(y_shft[i][j], 2));
+            par = pa + pa_grad*r;
+            sin_pa = sin(par);
+            cos_pa = cos(par);
 
             // rotate by pa around z (counter-clockwise, East pa = 0)
             xxd_rot = xd_shft*cos_pa + yd_shft*sin_pa;
