@@ -768,11 +768,17 @@ void DiscModel::calculate_vdisp() {
   /*
     Calculate velocity dispersion map.
   */
+  const double log_max_vdisp = log(500.0);
+
   for (size_t i=0; i<vdisp.size(); i++) {
     for (size_t j=0; j<vdisp[i].size(); j++) {
       vdisp[i][j] = vdisp_param[0];
-      for (int v=0; v<vdisp_order; v++)
+      for (int v=0; v<vdisp_order; v++) {
         vdisp[i][j] += vdisp_param[v+1]*pow(rad[i][j], v+1);
+        if (vdisp[i][j] > log_max_vdisp) {
+          vdisp[i][j] = log_max_vdisp;
+        }
+      }
       vdisp[i][j] = exp(vdisp[i][j])/constants::C;
     }
   }
