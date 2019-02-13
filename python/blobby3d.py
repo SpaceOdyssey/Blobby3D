@@ -20,7 +20,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends import backend_pdf
 
 import b3dplot
-from const import PhysicalConstants
 
 
 class Blobby3D:
