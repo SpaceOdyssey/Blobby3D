@@ -768,7 +768,7 @@ void DiscModel::calculate_vdisp() {
   /*
     Calculate velocity dispersion map.
   */
-  const double log_max_vdisp = log(500.0);
+  const double log_max_vdisp = log(100.0);
 
   for (size_t i=0; i<vdisp.size(); i++) {
     for (size_t j=0; j<vdisp[i].size(); j++) {
