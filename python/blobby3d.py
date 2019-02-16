@@ -20,10 +20,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends import backend_pdf
 
 import b3dplot
-<<<<<<< HEAD
-=======
 import b3dcomp
->>>>>>> master
 
 
 class Blobby3D:
