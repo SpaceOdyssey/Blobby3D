@@ -12,6 +12,13 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
+class cmap:
+    flux = 'Greys_r'
+    v = 'RdYlBu_r'
+    vdisp = 'YlOrBr'
+    residuals = 'RdYlBu_r'
+
+
 def plot_map(
         ax, map_2d,
         title=None,
@@ -19,6 +26,8 @@ def plot_map(
         ylabel=None,
         xticks=False,
         yticks=False,
+        xlim=None,
+        ylim=None,
         colorbar=False,
         colorbar_cax=None,
         cbar_label=None,
@@ -32,12 +41,12 @@ def plot_map(
         tick_fontsize='large',
         cb_label_fontsize='large',
         cb_tick_fontsize='large',
-        show_fwhm=False,
-        aspect=None):
-    """
-    Plot singular 2d map to an axes.
-    """
-    # Deal with limits
+        fwhm=None,
+        aspect=None,
+        mask=None):
+    """Plot singular 2d map to an axes."""
+    naxis = map_2d.shape
+
     if clim is not None:
         if clim[0] is None:
             clim[0] = np.nanmin(map_2d)
@@ -51,7 +60,6 @@ def plot_map(
     else:
         norm = None
 
-    # Construct 2D map
     ax.imshow(
         map_2d,
         origin='lower',
@@ -73,44 +81,60 @@ def plot_map(
     if isinstance(ylabel, str):
         ax.set_ylabel(ylabel, fontsize=label_fontsize)
 
-    # XTicks
-    # TODO: Combine XTicks/YTicks settings
-    if not xticks:
-        ax.set_xticks([])
-    elif xticks == 'all':
-        x_dist = np.diff(self.x_lim)[0]/2.0
-        ax.set_xticks([-0.5, (self.naxis[1]-1.0)/2.0, self.naxis[1]-0.5])
-        xtick_values = [-round(x_dist, 1), 0.0, round(x_dist, 1)]
-        ax.set_xticklabels(xtick_values, fontsize=tick_fontsize)
-    elif xticks == 'upper':
-        x_dist = np.diff(self.x_lim)[0]/2.0
-        ax.set_xticks([(self.naxis[1]-1.0)/2.0, self.naxis[1]-0.5])
-        xtick_values = [0.0, round(x_dist, 1)]
-        ax.set_xticklabels(xtick_values, fontsize=tick_fontsize)
-    elif xticks == 'lower':
-        x_dist = np.diff(self.x_lim)[0]/2.0
-        ax.set_xticks([-0.5, (self.naxis[1]-1.0)/2.0])
-        xtick_values = [-round(x_dist, 1), 0.0]
-        ax.set_xticklabels(xtick_values, fontsize=tick_fontsize)
+    set_ticks(
+            ax.xaxis,
+            ticks=xticks,
+            naxis=naxis[1],
+            lim=xlim,
+            tick_fontsize=tick_fontsize)
 
-    # YTicks
-    if not yticks:
-        ax.set_yticks([])
-    elif yticks == 'all':
-        y_dist = np.diff(self.y_lim)[0]/2.0
-        ax.set_yticks([-0.5, (self.naxis[0]-1.0)/2.0, self.naxis[0]-0.5])
-        ytick_values = [-round(y_dist, 1), 0.0, round(y_dist, 1)]
-        ax.set_yticklabels(ytick_values, fontsize=tick_fontsize)
-    elif yticks == 'upper':
-        y_dist = np.diff(self.y_lim)[0]/2.0
-        ax.set_yticks([(self.naxis[0]-1.0)/2.0, self.naxis[0]-0.5])
-        ytick_values = [0.0, round(y_dist, 1)]
-        ax.set_yticklabels(ytick_values, fontsize=tick_fontsize)
-    elif yticks == 'lower':
-        y_dist = np.diff(self.y_lim)[0]/2.0
-        ax.set_yticks([-0.5, (self.naxis[0]-1.0)/2.0])
-        ytick_values = [-round(y_dist, 1), 0.0]
-        ax.set_yticklabels(ytick_values, fontsize=tick_fontsize)
+    set_ticks(
+            ax.yaxis,
+            ticks=yticks,
+            naxis=naxis[0],
+            lim=ylim,
+            tick_fontsize=tick_fontsize)
+
+
+
+    # XTicks
+#    # TODO: Combine XTicks/YTicks settings
+#    if not xticks:
+#        ax.set_xticks([])
+#    elif xticks == 'all':
+#        x_dist = np.diff(self.x_lim)[0]/2.0
+#        ax.set_xticks([-0.5, (naxis[1]-1.0)/2.0, naxis[1]-0.5])
+#        xtick_values = [-round(x_dist, 1), 0.0, round(x_dist, 1)]
+#        ax.set_xticklabels(xtick_values, fontsize=tick_fontsize)
+#    elif xticks == 'upper':
+#        x_dist = np.diff(self.x_lim)[0]/2.0
+#        ax.set_xticks([(naxis[1]-1.0)/2.0, naxis[1]-0.5])
+#        xtick_values = [0.0, round(x_dist, 1)]
+#        ax.set_xticklabels(xtick_values, fontsize=tick_fontsize)
+#    elif xticks == 'lower':
+#        x_dist = np.diff(self.x_lim)[0]/2.0
+#        ax.set_xticks([-0.5, (naxis[1]-1.0)/2.0])
+#        xtick_values = [-round(x_dist, 1), 0.0]
+#        ax.set_xticklabels(xtick_values, fontsize=tick_fontsize)
+
+#    # YTicks
+#    if not yticks:
+#        ax.set_yticks([])
+#    elif yticks == 'all':
+#        y_dist = np.diff(self.y_lim)[0]/2.0
+#        ax.set_yticks([-0.5, (naxis[0]-1.0)/2.0, naxis[0]-0.5])
+#        ytick_values = [-round(y_dist, 1), 0.0, round(y_dist, 1)]
+#        ax.set_yticklabels(ytick_values, fontsize=tick_fontsize)
+#    elif yticks == 'upper':
+#        y_dist = np.diff(self.y_lim)[0]/2.0
+#        ax.set_yticks([(naxis[0]-1.0)/2.0, naxis[0]-0.5])
+#        ytick_values = [0.0, round(y_dist, 1)]
+#        ax.set_yticklabels(ytick_values, fontsize=tick_fontsize)
+#    elif yticks == 'lower':
+#        y_dist = np.diff(self.y_lim)[0]/2.0
+#        ax.set_yticks([-0.5, (naxis[0]-1.0)/2.0])
+#        ytick_values = [-round(y_dist, 1), 0.0]
+#        ax.set_yticklabels(ytick_values, fontsize=tick_fontsize)
 
     if colorbar:
         if colorbar_cax is None:
@@ -129,12 +153,34 @@ def plot_map(
                 cmap=cmap
                 )
 
-    if show_fwhm:
+    if fwhm is not None:
         circle = plt.Circle(
-                (1.1*self.lsf_fwhm, 1.1*self.lsf_fwhm),
-                radius=self.lsf_fwhm,
+                (1.1*fwhm, 1.1*fwhm),
+                radius=fwhm,
                 fill=False, edgecolor='r', linewidth=1.0)
         ax.add_artist(circle)
+
+
+def set_ticks(ax, naxis, ticks=False, lim=None, tick_fontsize='large'):
+    if not ticks:
+        ax.set_ticks([])
+    elif ticks == 'all':
+        dist = np.diff(lim)[0]/2.0
+        ax.set_ticks([-0.5, (naxis-1.0)/2.0, naxis-0.5])
+        tick_values = [-round(dist, 1), 0.0, round(dist, 1)]
+        ax.set_ticklabels(tick_values, fontsize=tick_fontsize)
+    elif ticks == 'upper':
+        dist = np.diff(lim)[0]/2.0
+        ax.set_ticks([(naxis-1.0)/2.0, naxis-0.5])
+        tick_values = [0.0, round(dist, 1)]
+        ax.set_ticklabels(tick_values, fontsize=tick_fontsize)
+    elif ticks == 'lower':
+        dist = np.diff(lim)[0]/2.0
+        ax.set_ticks([-0.5, (naxis-1.0)/2.0])
+        tick_values = [-round(dist, 1), 0.0]
+        ax.set_ticklabels(tick_values, fontsize=tick_fontsize)
+    else:
+        raise ValueError('xticks must be False, all, upper, lower.')
 
 
 def plot_colorbar(

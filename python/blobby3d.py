@@ -20,6 +20,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends import backend_pdf
 
 import b3dplot
+<<<<<<< HEAD
+=======
+import b3dcomp
+>>>>>>> master
 
 
 class Blobby3D:
@@ -156,3 +160,73 @@ class Blobby3D:
         """Plot individual map to a given axes object."""
         b3dplot.plot_map(ax, map_2d, **kwargs)
 
+    def setup_comparison_maps(
+            self, figsize=(10.0, 10.0), log_flux=True, **kwargs):
+        """Setup comparsion maps for a given sample."""
+        fig, ax = b3dcomp.setup_comparison_maps(
+                comp_shape=(2 + self.nlines, 3),
+                map_shape=self.naxis[:2],
+                figsize=figsize,
+                **kwargs)
+
+        return fig, ax
+
+    def add_comparison_maps(self, maps, ax, col, log_flux=False):
+        """Add a column worth of maps to the comparison maps."""
+        for line in range(self.nlines):
+            if log_flux:
+                flux_map = np.log10(maps[line, :, :])
+            else:
+                flux_map = maps[line, :, :]
+            self.plot_map(ax[line][col], flux_map, cmap=b3dplot.cmap.flux)
+        self.plot_map(
+                ax[self.nlines][col], maps[self.nlines, :, :],
+                cmap=b3dplot.cmap.v)
+        self.plot_map(
+                ax[self.nlines+1][col], maps[self.nlines+1, :, :],
+                cmap=b3dplot.cmap.vdisp)
+
+    def add_comparison_residuals(self, maps, ax, col, log_flux=False):
+        """Add a column worth of maps to the comparison maps."""
+        for line in range(self.nlines):
+            if log_flux:
+                flux_map = np.log10(maps[line, :, :])
+            else:
+                flux_map = maps[line, :, :]
+            self.plot_map(ax[line][col], flux_map, cmap=b3dplot.cmap.residuals)
+        self.plot_map(
+                ax[self.nlines][col], maps[self.nlines, :, :],
+                cmap=b3dplot.cmap.residuals)
+        self.plot_map(
+                ax[self.nlines+1][col], maps[self.nlines+1, :, :],
+                cmap=b3dplot.cmap.residuals)
+
+    def update_comparison_clim(
+            self, ax, cax,
+            pct=100.0, absolute=False, **cb_kwargs):
+        """Update each row colour scale for comparison plots."""
+        if isinstance(ax, (list, tuple)):
+            data = np.array([a.images[0]._A.data for a in ax])
+            clim = b3dcomp.map_limits(data, pct, absolute)
+            for a in ax:
+                a.images[0].set_clim(clim)
+            b3dcomp.colorbar(ax[-1].images[0], cax, clim, **cb_kwargs)
+        else:
+            data = ax.images[0]._A.data
+            clim = b3dcomp.map_limits(data, pct, absolute)
+            ax.images[0].set_clim(clim)
+            b3dcomp.colorbar(ax.images[0], cax, clim, **cb_kwargs)
+
+    def update_comparison_colorbar(self, ax, **cb_kwargs):
+        """
+        Update colorbars in accordance with corresponding maps.
+
+        ax : list of matplotlib.axes
+            The right-most axis is the colorbar. The preceding maps are the
+            maps with the corresponding clim.
+        """
+        clims = [a.images[0].get_clim() for a in ax[:-1]]
+        for clim in clims:
+            assert clim == clims[0]
+
+        b3dcomp.colorbar(ax[-1], clims[0], **cb_kwargs)
