@@ -67,7 +67,7 @@ There is also a MODEL_OPTIONS file that describes model parameterisation options
 LSFFWHM : float\
 &nbsp;&nbsp;Line Spread Function Full-Width Half-Maximum measured in Angstroms.\
 PSFWEIGHT : floats\
-&nbsp;&nbsp;Point Spread Function weights summing to 1.\
+&nbsp;&nbsp;Point Spread Function weights, which are the integral of each Gaussian and must sum to 1.\
 PSFFWHM : floats\
 &nbsp;&nbsp;Point Spread Function Full-Width Half-Maximum. The PSF is modelled a sum of concentric Gaussians described with pairs of (PSFWEIGHT, PSFFWHM).\
 INC : float\
